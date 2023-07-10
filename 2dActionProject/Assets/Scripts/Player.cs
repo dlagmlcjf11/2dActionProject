@@ -222,65 +222,73 @@ public class Player : MonoBehaviour
         }
     }
 
-        IEnumerator ChargeDamage()
+    IEnumerator ChargeDamage()
+    {
+        if (Input.GetButtonDown("Charge") && !isCharing)
         {
-            if (Input.GetButtonDown("Charge") && !isCharing)
-            {
-                yield return new WaitForSeconds(1.0f);
-                chargeTimer += 1.0f;
-                damage += 15;
+            yield return new WaitForSeconds(1.0f);
+            chargeTimer += 1.0f;
+            damage += 15;
 
-                yield return new WaitForSeconds(1.0f);
-                chargeTimer += 1.0f;
-                damage += 15;
+            yield return new WaitForSeconds(1.0f);
+            chargeTimer += 1.0f;
+            damage += 15;
 
-                yield return new WaitForSeconds(1.0f);
-                chargeTimer += 1.0f;
-                damage += 15;
+            yield return new WaitForSeconds(1.0f);
+            chargeTimer += 1.0f;
+            damage += 15;
 
-                yield return new WaitForSeconds(1.0f);
-                chargeTimer += 1.0f;
-                damage += 15;
+            yield return new WaitForSeconds(1.0f);
+            chargeTimer += 1.0f;
+            damage += 15;
             }
-        }
+    }
 
 
 
-        IEnumerator ChangeColor()
+    IEnumerator ChangeColor()
+    {
+        renderer.color = new Color(0, 0, 0, 0.5f);
+        yield return new WaitForSeconds(0.5f);
+        renderer.color = new Color(1, 1, 1);
+
+    }
+
+    void DoDamage()
+    {
+        Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(Meleepos.position, boxSize, 0);
+        foreach (Collider2D item in collider2Ds)
         {
-            renderer.color = new Color(0, 0, 0, 0.5f);
-            yield return new WaitForSeconds(0.5f);
-            renderer.color = new Color(1, 1, 1);
-
-        }
-
-        void DoDamage()
-        {
-            Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(Meleepos.position, boxSize, 0);
-            foreach (Collider2D item in collider2Ds)
+            if (item.tag == "Enemy")
             {
-                if (item.tag == "Enemy")
+                Enemy enemy = item.GetComponent<Enemy>();
+                if (enemy != null)
                 {
-                    Enemy enemy = item.GetComponent<Enemy>();
-                    if (enemy != null)
-                    {
-                        enemy.OnDamaged();
-                    }
+                    enemy.OnDamaged();
                 }
             }
         }
+    }
 
-        void OnDrawGizmos()
-        {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawWireCube(Meleepos.position, boxSize);
-        }
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireCube(Meleepos.position, boxSize);
+    }
 
-        void OnCollisionEnter2D(Collision2D collision)
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Floor")
         {
-            if (collision.gameObject.tag == "Floor")
-            {
-                anim.SetBool("isJump", false);
-            }
+            anim.SetBool("isJump", false);
         }
+    }
+
+    void OnTriggerStay2D(Collider2D collision)
+    {
+        if(collision.gameObject.tag == "Portal")
+        {
+            Debug.Log(collision.gameObject.tag);
+        }
+    }
 }
