@@ -1,24 +1,27 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
-    public float maxSpeed; // ÃÖ´ë ¼Óµµ
-    public float jumpPower; // Á¡ÇÁ ÆÄ¿ö
-    public int damage = 10; // °ø°İ µ¥¹ÌÁö
-    public float coolTime = 0.7f; // °ø°İ ÄğÅ¸ÀÓ
-    public int combo = 0; // ÄŞº¸ ½×±â
-    public int maxCombo = 1; // ¸Æ½ºÄŞº¸
-    public float comboResetTime = 2.0f; // °ø°İ ¾øÀÌ ´ë±âÇÒ ½Ã°£
+    public float maxSpeed; // ï¿½Ö´ï¿½ ï¿½Óµï¿½
+    public float jumpPower; // ï¿½ï¿½ï¿½ï¿½ ï¿½Ä¿ï¿½
+    public int damage = 10; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    public float coolTime = 0.7f; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
+    public int combo = 0; // ï¿½Şºï¿½ ï¿½×±ï¿½
+    public int maxCombo = 1; // ï¿½Æ½ï¿½ï¿½Şºï¿½
+    public float comboResetTime = 2.0f; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
     public float speed;
     public float defaultSpeed;
-    float comboTimer = 0.0f; // ÇöÀç ´ë±â ½Ã°£À» ÃßÀûÇÏ´Â Å¸ÀÌ¸Ó
-    public float chargeTimer = 0.0f; //Â÷Â¡ ½Ã°£(Â÷Â¡ÇÒ ¶§¸¶´Ù ½Ã°£++)
-    float maxChargeTime = 4.0f; //¸Æ½º Â÷Â¡ ½Ã°£ (4ÃÊ±îÁö °¡¸é Â÷Â¡ ³¡³»°í °ø°İ)
-    bool isCharing = false;//Â÷Â¡À» ÇÏ°í ÀÖ´ÂÁö °ËÁõ
-    bool isDash = false; // ´ë½¬¸¦ ÇÏ´ÂÁö °ËÁõ
-    public float dashSpeed;//´ë½¬ ¼Óµµ
+    float comboTimer = 0.0f; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ Å¸ï¿½Ì¸ï¿½
+    public float chargeTimer = 0.0f; //ï¿½ï¿½Â¡ ï¿½Ã°ï¿½(ï¿½ï¿½Â¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½++)
+    float maxChargeTime = 4.0f; //ï¿½Æ½ï¿½ ï¿½ï¿½Â¡ ï¿½Ã°ï¿½ (4ï¿½Ê±ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Â¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+    bool isCharing = false;//ï¿½ï¿½Â¡ï¿½ï¿½ ï¿½Ï°ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    bool isDash = false; // ï¿½ë½¬ï¿½ï¿½ ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    public float dashSpeed;//ï¿½ë½¬ ï¿½Óµï¿½
     public float defaultTime;
     float dashTime;
     public Transform Meleepos;
@@ -30,6 +33,12 @@ public class Player : MonoBehaviour
     Animator anim;
     [HideInInspector] [SerializeField] new SpriteRenderer renderer;
 
+    public Image chargingBar;
+    public float chargingSpeed = 0.5f;
+    public float targetWidth = 1.5f;
+    RectTransform chargingRectTransform;
+    private float chargeSumTime = 0.0f;
+
 
     void Awake()
     {
@@ -37,6 +46,7 @@ public class Player : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         renderer = GetComponent<SpriteRenderer>();
+        chargingRectTransform = chargingBar.GetComponent<RectTransform>();
     }
 
     void Update()
@@ -50,16 +60,16 @@ public class Player : MonoBehaviour
     void Move()
     {
         hAxis = Input.GetAxisRaw("Horizontal");
-        //¿òÁ÷ÀÓ
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         rigid.velocity = new Vector2(hAxis * defaultSpeed, rigid.velocity.y);
 
-        //¼Óµµ ¸ØÃß±â
+        //ï¿½Óµï¿½ ï¿½ï¿½ï¿½ß±ï¿½
         if(Input.GetButtonUp("Horizontal"))
         {
             rigid.velocity = new Vector2(rigid.velocity.normalized.x * 0.5f, rigid.velocity.y);
         }
 
-        //¾Ö´Ï¸ŞÀÌ¼Ç
+        //ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½
         if(Mathf.Abs(rigid.velocity.x) < 0.4)
         {
             anim.SetBool("isRun", false);
@@ -104,10 +114,10 @@ public class Player : MonoBehaviour
     {
         if(Input.GetButtonDown("Horizontal"))
         {
-            //½ÃÁ¡ ¹İÀü
+            //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             renderer.flipX = Input.GetAxisRaw("Horizontal") == -1;
             bool isFlipX = renderer.flipX;
-            //°ø°İ¹üÀ§µµ ÇÔ²² ¹İÀü
+            //ï¿½ï¿½ï¿½İ¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô²ï¿½ ï¿½ï¿½ï¿½ï¿½
             Meleepos.localPosition = new Vector3((isFlipX ? -0.5f : 0.5f), Meleepos.localPosition.y, Meleepos.localPosition.z);
 
         }
@@ -115,10 +125,10 @@ public class Player : MonoBehaviour
 
     void Attack()
     {
-        //¸¶¿ì½º ¿ŞÅ¬¸¯À» ´©¸£¸é °ø°İ
+        //ï¿½ï¿½ï¿½ì½º ï¿½ï¿½Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (Input.GetButtonDown("Fire1") && curTime <= 0)
         {
-            //°ø°İ
+            //ï¿½ï¿½ï¿½ï¿½
             if (combo < maxCombo)
             {
                 combo += 1;
@@ -134,7 +144,7 @@ public class Player : MonoBehaviour
                 anim.SetTrigger("doCombo");
                 curTime = coolTime;
             }
-            // °ø°İÀÌ ÀÖÀ» ¶§¸¶´Ù comboTimer ÃÊ±âÈ­
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ comboTimer ï¿½Ê±ï¿½È­
             comboTimer = comboResetTime;
             damage = 10;
         }
@@ -148,55 +158,85 @@ public class Player : MonoBehaviour
             combo = 0;
         }
 
-        //Â÷Â¡ °ø°İ
-        if(Input.GetButtonDown("Charge") && !isCharing)
+        //ï¿½ï¿½Â¡ ï¿½ï¿½ï¿½ï¿½
+        if(Input.GetButtonDown("Charge") && !isCharing && chargeSumTime < chargingSpeed)
         {
             anim.SetTrigger("doCharge");
             StartCoroutine(ChargeDamage());
+            StartCoroutine(ChargeBar());
             isCharing = true;
-        } //chargeTimer°¡ maxChargeTimeº¸´Ù Ä¿Áö¸é °ø°İ ½ÇÇà
+        } //chargeTimerï¿½ï¿½ maxChargeTimeï¿½ï¿½ï¿½ï¿½ Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         else if(chargeTimer >= maxChargeTime)
         {
             StartCoroutine(ChangeColor());
             StopCoroutine(ChargeDamage());
+            StopCoroutine(ChargeBar());
             anim.SetTrigger("doAttack");
             DoDamage();
             StopCoroutine(ChangeColor());
             damage = 10;
             chargeTimer = 0f;
+            float currentWidth = chargingRectTransform.rect.x;
             isCharing = false;
-        } //Â÷Â¡À» ¶¼¸é Â÷Â¡ Áï½Ã Á¾·á
+        } //ï¿½ï¿½Â¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Â¡ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         else if(Input.GetButtonUp("Charge"))
         {
             StopCoroutine(ChargeDamage());
+            StopCoroutine(ChargeBar());
             damage = 10;
             chargeTimer = 0f;
             isCharing = false;
         }
     }
-    
+    IEnumerator ChargeBar()
+    {
+        float chargeTime = 4f; // ì´ ì°¨ì§• ì‹œê°„ (4ì´ˆ)
+        float startTime = Time.time; // ì‹œì‘ ì‹œê°„
+
+        while (Time.time - startTime < chargeTime)
+        {
+            float elapsedTime = Time.time - startTime; // ê²½ê³¼ ì‹œê°„
+            float progress = elapsedTime / chargeTime; // ì§„í–‰ ìƒíƒœ (0 ~ 1)
+
+            float newWidth = Mathf.Lerp(0f, targetWidth, progress); // ì°¨ì§• ë°”ì˜ ìƒˆë¡œìš´ ë„ˆë¹„ ê³„ì‚°
+            chargingRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newWidth);
+
+            yield return null;
+            if (startTime == chargeTime)
+            {
+                break;
+            }
+        }
+    }
+
     IEnumerator ChargeDamage()
     {
-        if(Input.GetButtonDown("Charge") && !isCharing)
+        if (Input.GetButtonDown("Charge") && !isCharing)
         {
             yield return new WaitForSeconds(1.0f);
             chargeTimer += 1.0f;
             damage += 15;
+
             yield return new WaitForSeconds(1.0f);
             chargeTimer += 1.0f;
             damage += 15;
+
             yield return new WaitForSeconds(1.0f);
             chargeTimer += 1.0f;
             damage += 15;
+
             yield return new WaitForSeconds(1.0f);
             chargeTimer += 1.0f;
             damage += 15;
         }
-        else if(Input.GetButtonUp("Charge"))
+
+        else if (Input.GetButtonUp("Charge"))
         {
             yield return null;
         }
     }
+
+
 
     IEnumerator ChangeColor()
     {
