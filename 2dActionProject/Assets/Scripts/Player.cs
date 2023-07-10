@@ -24,6 +24,7 @@ public class Player : MonoBehaviour
     public float dashSpeed;//�뽬 �ӵ�
     public float defaultTime;
     float dashTime;
+    public float chargeCnt = 0;
     public Transform Meleepos;
     public Vector2 boxSize;
 
@@ -31,10 +32,10 @@ public class Player : MonoBehaviour
     float hAxis;
     Rigidbody2D rigid;
     Animator anim;
-    [HideInInspector] [SerializeField] new SpriteRenderer renderer;
+    [HideInInspector][SerializeField] new SpriteRenderer renderer;
 
     public Image chargingBar;
-    public float chargingSpeed = 0.5f;
+    public float chargingSpeed = 10f;
     public float targetWidth = 1.5f;
     RectTransform chargingRectTransform;
     private float chargeSumTime = 0.0f;
@@ -64,13 +65,13 @@ public class Player : MonoBehaviour
         rigid.velocity = new Vector2(hAxis * defaultSpeed, rigid.velocity.y);
 
         //�ӵ� ���߱�
-        if(Input.GetButtonUp("Horizontal"))
+        if (Input.GetButtonUp("Horizontal"))
         {
             rigid.velocity = new Vector2(rigid.velocity.normalized.x * 0.5f, rigid.velocity.y);
         }
 
         //�ִϸ��̼�
-        if(Mathf.Abs(rigid.velocity.x) < 0.4)
+        if (Mathf.Abs(rigid.velocity.x) < 0.4)
         {
             anim.SetBool("isRun", false);
         }
@@ -81,14 +82,14 @@ public class Player : MonoBehaviour
     }
     void Dash()
     {
-        if(Input.GetButtonDown("Dash"))
+        if (Input.GetButtonDown("Dash"))
         {
             isDash = true;
         }
-        if(dashTime <= 0)
+        if (dashTime <= 0)
         {
             defaultSpeed = speed;
-            if(isDash)
+            if (isDash)
             {
                 dashTime = defaultTime;
             }
@@ -102,17 +103,17 @@ public class Player : MonoBehaviour
     }
     void Jump()
     {
-        if(Input.GetButtonDown("Jump") && !anim.GetBool("isJump"))
+        if (Input.GetButtonDown("Jump") && !anim.GetBool("isJump"))
         {
             rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
-            
+
             anim.SetBool("isJump", true);
         }
-        
+
     }
     void Turn()
     {
-        if(Input.GetButtonDown("Horizontal"))
+        if (Input.GetButtonDown("Horizontal"))
         {
             //���� ����
             renderer.flipX = Input.GetAxisRaw("Horizontal") == -1;
@@ -158,16 +159,21 @@ public class Player : MonoBehaviour
             combo = 0;
         }
 
+        float currentWidth = chargingRectTransform.rect.x;
+        bool isChargeButtonUp = false;
         //��¡ ����
-        if(Input.GetButtonDown("Charge") && !isCharing && chargeSumTime < chargingSpeed)
+        if (Input.GetButtonDown("Charge") && !isCharing && chargeSumTime < chargingSpeed && chargeCnt == 0)
         {
+            isChargeButtonUp = false;
+            chargeCnt = 1;
             anim.SetTrigger("doCharge");
             StartCoroutine(ChargeDamage());
             StartCoroutine(ChargeBar());
             isCharing = true;
         } //chargeTimer�� maxChargeTime���� Ŀ���� ���� ����
-        else if(chargeTimer >= maxChargeTime)
+        else if (chargeTimer >= maxChargeTime)
         {
+            isChargeButtonUp = false;
             StartCoroutine(ChangeColor());
             StopCoroutine(ChargeDamage());
             StopCoroutine(ChargeBar());
@@ -176,15 +182,21 @@ public class Player : MonoBehaviour
             StopCoroutine(ChangeColor());
             damage = 10;
             chargeTimer = 0f;
-            float currentWidth = chargingRectTransform.rect.x;
+            currentWidth = 0f;
+            chargingRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, currentWidth);
+            chargeCnt = 0;
             isCharing = false;
         } //��¡�� ���� ��¡ ��� ����
-        else if(Input.GetButtonUp("Charge"))
+        else if (Input.GetButtonUp("Charge") && chargeCnt == 1)
         {
+            isChargeButtonUp = true;
             StopCoroutine(ChargeDamage());
             StopCoroutine(ChargeBar());
             damage = 10;
             chargeTimer = 0f;
+            currentWidth = 0f;
+            chargingRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, currentWidth);
+            chargeCnt = 0;
             isCharing = false;
         }
     }
@@ -192,6 +204,7 @@ public class Player : MonoBehaviour
     {
         float chargeTime = 4f; // 총 차징 시간 (4초)
         float startTime = Time.time; // 시작 시간
+
 
         while (Time.time - startTime < chargeTime)
         {
@@ -209,71 +222,65 @@ public class Player : MonoBehaviour
         }
     }
 
-    IEnumerator ChargeDamage()
-    {
-        if (Input.GetButtonDown("Charge") && !isCharing)
+        IEnumerator ChargeDamage()
         {
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-        }
-
-        else if (Input.GetButtonUp("Charge"))
-        {
-            yield return null;
-        }
-    }
-
-
-
-    IEnumerator ChangeColor()
-    {
-        renderer.color = new Color(0, 0, 0, 0.5f);
-        yield return new WaitForSeconds(0.5f);
-        renderer.color = new Color(1,1,1);
-        
-    }
-
-    void DoDamage()
-    {
-        Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(Meleepos.position, boxSize, 0);
-        foreach (Collider2D item in collider2Ds)
-        {
-            if (item.tag == "Enemy")
+            if (Input.GetButtonDown("Charge") && !isCharing)
             {
-                Enemy enemy = item.GetComponent<Enemy>();
-                if (enemy != null)
+                yield return new WaitForSeconds(1.0f);
+                chargeTimer += 1.0f;
+                damage += 15;
+
+                yield return new WaitForSeconds(1.0f);
+                chargeTimer += 1.0f;
+                damage += 15;
+
+                yield return new WaitForSeconds(1.0f);
+                chargeTimer += 1.0f;
+                damage += 15;
+
+                yield return new WaitForSeconds(1.0f);
+                chargeTimer += 1.0f;
+                damage += 15;
+            }
+        }
+
+
+
+        IEnumerator ChangeColor()
+        {
+            renderer.color = new Color(0, 0, 0, 0.5f);
+            yield return new WaitForSeconds(0.5f);
+            renderer.color = new Color(1, 1, 1);
+
+        }
+
+        void DoDamage()
+        {
+            Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(Meleepos.position, boxSize, 0);
+            foreach (Collider2D item in collider2Ds)
+            {
+                if (item.tag == "Enemy")
                 {
-                    enemy.OnDamaged();
+                    Enemy enemy = item.GetComponent<Enemy>();
+                    if (enemy != null)
+                    {
+                        enemy.OnDamaged();
+                    }
                 }
             }
         }
-    }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(Meleepos.position, boxSize);
-    }
-
-    void OnCollisionEnter2D(Collision2D collision)
-    {
-        if(collision.gameObject.tag == "Floor")
+        void OnDrawGizmos()
         {
-            anim.SetBool("isJump", false);
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireCube(Meleepos.position, boxSize);
         }
-    }
 
+        void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (collision.gameObject.tag == "Floor")
+            {
+                anim.SetBool("isJump", false);
+            }
+        }
 }
