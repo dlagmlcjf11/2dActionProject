@@ -9,10 +9,10 @@ public class Enemy : MonoBehaviour
 
     public Transform pos;
     public int damage = 2;
-    public BoxCollider2D box;
+    public GameObject box;
     public float coolTime;
-    float currentTime;
-    
+    public float currentTime;
+
     void Awake()
     {
         player = GameObject.FindObjectOfType<Player>();
@@ -36,26 +36,22 @@ public class Enemy : MonoBehaviour
                     if (collider[i].tag == "Player")
                     {
                         //animation
-                        Debug.Log("퍽");
-                        enBox();
+                        box.SetActive(true);
+                        currentTime = coolTime;
+                        StartCoroutine(deBox());
                     }
-                    currentTime = coolTime;
-                    deBox();
                 }
             }
         }
         currentTime -= Time.deltaTime;
     }
 
-    void enBox()
+    IEnumerator deBox()
     {
-        box.enabled = true;
+        yield return new WaitForSeconds(3f);
+        box.SetActive(false);
     }
 
-    void deBox()
-    {
-        box.enabled = false;
-    }
     void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
@@ -64,6 +60,7 @@ public class Enemy : MonoBehaviour
 
     public void OnDamaged()
     {
+        Debug.Log("Damaged");
         health -= player.damage;
     }
 }

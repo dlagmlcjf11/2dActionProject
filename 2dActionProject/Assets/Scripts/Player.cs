@@ -27,6 +27,7 @@ public class Player : MonoBehaviour
     public float chargeCnt = 0;
     public Transform Meleepos;
     public Vector2 boxSize;
+    public RectTransform playerRectTransform;
 
     float curTime;
     float hAxis;
@@ -42,7 +43,7 @@ public class Player : MonoBehaviour
 
     //TakeHit
     public int health = 2;
-    bool isHurt;
+    public bool isHurt = false;
     SpriteRenderer playerRenderer;
     Color halfA = new Color(1,1,1,0.5f);
     Color fullA = new Color(1,1,1,1);
@@ -67,9 +68,9 @@ public class Player : MonoBehaviour
     {
         Move();
         Turn();
-        Dash();
         Jump();
         Attack();
+        Dash();
     }
     void Move()
     {
@@ -295,7 +296,7 @@ public class Player : MonoBehaviour
     }
     void TakeHit(int damage, Vector2 pos)
     {
-        if(!isHurt)
+        if (!isHurt)
         {
             isHurt = true;
             health -= damage;
@@ -305,7 +306,7 @@ public class Player : MonoBehaviour
             }
             else
             {
-                //anim.SetTrigger("");
+                anim.SetTrigger("doTakeHit");
                 audio.clip = knockbackImpact;
                 audio.Play();
                 float x = transform.position.x - pos.x;
@@ -342,7 +343,7 @@ public class Player : MonoBehaviour
 
     IEnumerator HurtRoutine()
     {
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(4f);
         isHurt = false;
     }
 
@@ -363,14 +364,20 @@ public class Player : MonoBehaviour
         {
             anim.SetBool("isJump", false);
         }
+        if (collision.gameObject.tag == "FloorCheck")
+        {
+            playerRectTransform.localPosition = new Vector3(-14.1f, -0.35f, 0f);
+            health -= 10;
+        }
     }
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("EnmeyAtk"))
+        if (collision.CompareTag("EnemyAtk"))
         {
-            Debug.Log("꺅");
             TakeHit(collision.GetComponentInParent<Enemy>().damage, collision.transform.position);
+            Debug.Log(collision.GetComponentInParent<Enemy>().damage);
+            Debug.Log(collision.transform.position);
         }
     }
 

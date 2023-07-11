@@ -9,6 +9,7 @@ TagManager:
   - Portal
   - EnemyAtk
   - Dummy
+  - FloorCheck
   layers:
   - Default
   - TransparentFX
