@@ -14,25 +14,25 @@ public class TrainingDummies : MonoBehaviour
     void Start()
     {
         player = GameObject.FindObjectOfType<Player>();
-        //dummyRenderer = GetComponent<SpriteRenderer>()
+        dummyRenderer = GetComponent<SpriteRenderer>();
     }
     public void OnDamaged()
     {
         health -= player.damage;
         isHurt = true;
-        //StartCoroutine(alphablink());
+        StartCoroutine(alphablink());
     }
-/*
+
     IEnumerator alphablink()
     {
         while (isHurt)
         {
-            yield return new WaitForSeconds(0.1f);
-            playerRenderer.color = halfA;
-            yield return new WaitForSeconds(0.1f);
-            playerRenderer.color = fullA;
             isHurt = false;
+            yield return new WaitForSeconds(0.1f);
+            dummyRenderer.color = halfA;
+            yield return new WaitForSeconds(0.1f);
+            dummyRenderer.color = fullA;
+            
         }
     }
-*/
 }
