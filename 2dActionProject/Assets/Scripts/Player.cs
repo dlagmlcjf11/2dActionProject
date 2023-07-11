@@ -28,6 +28,7 @@ public class Player : MonoBehaviour
     public Transform Meleepos;
     public Vector2 boxSize;
     public RectTransform playerRectTransform;
+    public GameObject player;
 
     float curTime;
     float hAxis;
@@ -302,7 +303,8 @@ public class Player : MonoBehaviour
             health -= damage;
             if(health <= 0)
             {
-                //dead
+                anim.SetTrigger("doDeath");
+                StartCoroutine(playerDeath());
             }
             else
             {
@@ -323,6 +325,12 @@ public class Player : MonoBehaviour
                 StartCoroutine(alphablink());
             }
         }
+    }
+
+    IEnumerator playerDeath()
+    {
+        yield return new WaitForSeconds(2f);
+        player.SetActive(false);
     }
 
     IEnumerator Knockback(float dir)

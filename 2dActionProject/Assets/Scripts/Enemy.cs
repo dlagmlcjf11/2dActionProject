@@ -10,12 +10,15 @@ public class Enemy : MonoBehaviour
     public Transform pos;
     public int damage = 2;
     public GameObject box;
+    public GameObject enemy;
     public float coolTime;
     public float currentTime;
+    Animator anim;
 
     void Awake()
     {
         player = GameObject.FindObjectOfType<Player>();
+        anim = GetComponent<Animator>();
     }
 
     void Update()
@@ -35,8 +38,8 @@ public class Enemy : MonoBehaviour
                 {
                     if (collider[i].tag == "Player")
                     {
-                        //animation
-                        box.SetActive(true);
+                        anim.SetTrigger("doAttack");
+                        StartCoroutine(enBox());
                         currentTime = coolTime;
                         StartCoroutine(deBox());
                     }
@@ -46,21 +49,33 @@ public class Enemy : MonoBehaviour
         currentTime -= Time.deltaTime;
     }
 
-    IEnumerator deBox()
+    IEnumerator enBox()
     {
-        yield return new WaitForSeconds(3f);
-        box.SetActive(false);
+        yield return new WaitForSeconds(0.3f);
+        box.SetActive(true);
     }
 
-    void OnDrawGizmos()
+    IEnumerator deBox()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireCube(pos.position, new Vector3(1f, 1f, 1f));
+        yield return new WaitForSeconds(0.8f);
+        box.SetActive(false);
     }
 
     public void OnDamaged()
     {
-        Debug.Log("Damaged");
+        anim.SetTrigger("doTakeHit");
         health -= player.damage;
+        if(health <= 0) {
+            anim.SetTrigger("doDeath");
+            StartCoroutine(enemyDeath());
+        }
     }
+
+    IEnumerator enemyDeath()
+    {
+        yield return new WaitForSeconds(2f);
+        enemy.SetActive(false);
+    }
+
+    
 }
