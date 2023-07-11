@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -17,14 +18,10 @@ public class Player : MonoBehaviour
     public float speed;
     public float defaultSpeed;
     float comboTimer = 0.0f; // 占쏙옙占쏙옙 占쏙옙占?占시곤옙占쏙옙 占쏙옙占쏙옙占싹댐옙 타占싱몌옙
-    public float chargeTimer = 0.0f; //占쏙옙징 占시곤옙(占쏙옙징占쏙옙 占쏙옙占쏙옙占쏙옙 占시곤옙++)
-    float maxChargeTime = 4.0f; //占싣쏙옙 占쏙옙징 占시곤옙 (4占십깍옙占쏙옙 占쏙옙占쏙옙 占쏙옙징 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙)
-    bool isCharing = false;//占쏙옙징占쏙옙 占싹곤옙 占쌍댐옙占쏙옙 占쏙옙占쏙옙
     bool isDash = false; // 占쎈쉬占쏙옙 占싹댐옙占쏙옙 占쏙옙占쏙옙
     public float dashSpeed;//占쎈쉬 占쌈듸옙
     public float defaultTime;
     float dashTime;
-    public float chargeCnt = 0;
     public Transform Meleepos;
     public Vector2 boxSize;
     public RectTransform playerRectTransform;
@@ -35,12 +32,6 @@ public class Player : MonoBehaviour
     Rigidbody2D rigid;
     Animator anim;
     [HideInInspector][SerializeField] new SpriteRenderer renderer;
-
-    public Image chargingBar;
-    public float chargingSpeed = 10f;
-    public float targetWidth = 1.5f;
-    RectTransform chargingRectTransform;
-    private float chargeSumTime = 0.0f;
 
     //TakeHit
     public int health = 2;
@@ -53,6 +44,8 @@ public class Player : MonoBehaviour
     public AudioClip knockbackImpact;
     AudioSource audio;
 
+    //Scene
+    public int stage = 0;
 
     void Awake()
     {
@@ -62,7 +55,6 @@ public class Player : MonoBehaviour
         renderer = GetComponent<SpriteRenderer>();
         playerRenderer = GetComponent<SpriteRenderer>();
         audio = GetComponent<AudioSource>();
-        chargingRectTransform = chargingBar.GetComponent<RectTransform>();
     }
 
     void Update()
@@ -172,91 +164,22 @@ public class Player : MonoBehaviour
         if (comboTimer <= 0.0f)
         {
             combo = 0;
-        }
-
-        float currentWidth = chargingRectTransform.rect.x;
-
-        //占쏙옙징 占쏙옙占쏙옙
-        if (Input.GetButtonDown("Charge") && !isCharing && chargeSumTime < chargingSpeed && chargeCnt == 0)
-        {
-
-            chargeCnt = 1;
-            anim.SetTrigger("doCharge");
-            StartCoroutine(ChargeDamage());
-            StartCoroutine(ChargeBar());
-            isCharing = true;
-        } //chargeTimer占쏙옙 maxChargeTime占쏙옙占쏙옙 커占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙
-        else if (chargeTimer >= maxChargeTime)
+        } 
+        if (Input.GetButtonDown("Special"))
         {
 
             StartCoroutine(ChangeColor());
-            StopCoroutine(ChargeDamage());
-            StopCoroutine(ChargeBar());
-            anim.SetTrigger("doAttack");
+            StartCoroutine(SpecialDamage());
+            anim.SetTrigger("doSpecial");
             DoDamage();
-            StopCoroutine(ChangeColor());
-            damage = 10;
-            chargeTimer = 0f;
-            currentWidth = 0f;
-            chargingRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, currentWidth);
-            chargeCnt = 0;
-            isCharing = false;
-        } //占쏙옙징占쏙옙 占쏙옙占쏙옙 占쏙옙징 占쏙옙占?占쏙옙占쏙옙
-        else if (Input.GetButtonUp("Charge") && chargeCnt == 1)
-        {
-
-            StopCoroutine(ChargeDamage());
-            StopCoroutine(ChargeBar());
-            damage = 10;
-            chargeTimer = 0f;
-            currentWidth = 0f;
-            chargingRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, currentWidth);
-            chargeCnt = 0;
-            isCharing = false;
-        }
-    }
-    IEnumerator ChargeBar()
-    {
-        float chargeTime = 4f; // 珥?李⑥쭠 ?쒓컙 (4珥?
-        float startTime = Time.time; // ?쒖옉 ?쒓컙
-
-
-        while (Time.time - startTime < chargeTime)
-        {
-            float elapsedTime = Time.time - startTime; // 寃쎄낵 ?쒓컙
-            float progress = elapsedTime / chargeTime; // 吏꾪뻾 ?곹깭 (0 ~ 1)
-
-            float newWidth = Mathf.Lerp(0f, targetWidth, progress); // 李⑥쭠 諛붿쓽 ?덈줈???덈퉬 怨꾩궛
-            chargingRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newWidth);
-
-            yield return null;
-            if (startTime == chargeTime)
-            {
-                break;
-            }
-        }
+        } 
     }
 
-    IEnumerator ChargeDamage()
+    IEnumerator SpecialDamage()
     {
-        if (Input.GetButtonDown("Charge") && !isCharing)
-        {
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-
-            yield return new WaitForSeconds(1.0f);
-            chargeTimer += 1.0f;
-            damage += 15;
-            }
+        damage += 50;
+        yield return new WaitForSeconds(1f);
+        damage = 10;
     }
 
 
@@ -264,7 +187,7 @@ public class Player : MonoBehaviour
     IEnumerator ChangeColor()
     {
         renderer.color = new Color(0, 0, 0, 0.5f);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.8f);
         renderer.color = new Color(1, 1, 1);
 
     }
@@ -305,6 +228,7 @@ public class Player : MonoBehaviour
             {
                 anim.SetTrigger("doDeath");
                 StartCoroutine(playerDeath());
+                stage = 0;
             }
             else
             {
@@ -384,8 +308,6 @@ public class Player : MonoBehaviour
         if (collision.CompareTag("EnemyAtk"))
         {
             TakeHit(collision.GetComponentInParent<Enemy>().damage, collision.transform.position);
-            Debug.Log(collision.GetComponentInParent<Enemy>().damage);
-            Debug.Log(collision.transform.position);
         }
     }
 
@@ -393,7 +315,21 @@ public class Player : MonoBehaviour
     {
         if(collision.gameObject.tag == "Portal")
         {
-            Debug.Log(collision.gameObject.tag);
+            Debug.Log(Input.GetButtonDown("Interaction"));
+            if (stage == 0 && Input.GetButtonDown("Interaction"))
+            {
+                SceneManager.LoadScene("BattleScene");
+                stage++;
+            }
+            else if (stage == 1 && Input.GetButtonDown("Interaction"))
+            {
+                SceneManager.LoadScene("ShopScene");
+                stage++;
+            }
+            else if (stage == 2 && Input.GetButtonDown("Interaction"))
+            {
+                SceneManager.LoadScene("BossScene");
+            }
         }
     }
 }
