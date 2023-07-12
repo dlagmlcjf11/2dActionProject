@@ -6,10 +6,12 @@ TagManager:
   tags:
   - Floor
   - Enemy
-  - Portal
   - EnemyAtk
   - Dummy
   - FloorCheck
+  - BattlePortal
+  - ShopPortal
+  - BossPortal
   layers:
   - Default
   - TransparentFX

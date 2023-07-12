@@ -152,7 +152,6 @@ public class Player : MonoBehaviour
                 anim.SetTrigger("doCombo");
                 curTime = coolTime;
             }
-            // 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙占쏙옙 comboTimer 占십깍옙화
             comboTimer = comboResetTime;
             damage = 10;
         }
@@ -313,23 +312,26 @@ public class Player : MonoBehaviour
 
     void OnTriggerStay2D(Collider2D collision)
     {
-        if(collision.gameObject.tag == "Portal")
+        if(collision.gameObject.tag == "BattlePortal")
         {
-            Debug.Log(Input.GetButtonDown("Interaction"));
-            if (stage == 0 && Input.GetButtonDown("Interaction"))
+            if (Input.GetButtonDown("Interaction"))
             {
-                SceneManager.LoadScene("BattleScene");
-                stage++;
-            }
-            else if (stage == 1 && Input.GetButtonDown("Interaction"))
-            {
-                SceneManager.LoadScene("ShopScene");
-                stage++;
-            }
-            else if (stage == 2 && Input.GetButtonDown("Interaction"))
-            {
-                SceneManager.LoadScene("BossScene");
+                SceneManager.LoadScene(1);
             }
         }
+        if(collision.gameObject.tag == "ShopPortal")
+        {
+            if (Input.GetButtonDown("Interaction"))
+            {
+                SceneManager.LoadScene(2);
+            }
+        }
+        if(collision.gameObject.tag == "BossPortal")
+        {
+            if (Input.GetButtonDown("Interaction"))
+            {
+                SceneManager.LoadScene(3);
+            }
+        }          
     }
 }
