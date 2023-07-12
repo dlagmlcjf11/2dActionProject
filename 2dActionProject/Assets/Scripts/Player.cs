@@ -5,21 +5,23 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEditor.PackageManager.UI;
+using UnityEditor;
 
 public class Player : MonoBehaviour
 {
-    public float maxSpeed; // 占쌍댐옙 占쌈듸옙
-    public float jumpPower; // 占쏙옙占쏙옙 占식울옙
-    public int damage = 10; // 占쏙옙占쏙옙 占쏙옙占쏙옙占쏙옙
-    public float coolTime = 0.7f; // 占쏙옙占쏙옙 占쏙옙타占쏙옙
-    public int combo = 0; // 占쌨븝옙 占쌓깍옙
-    public int maxCombo = 1; // 占싣쏙옙占쌨븝옙
-    public float comboResetTime = 2.0f; // 占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙占?占시곤옙
+    public float maxSpeed; 
+    public float jumpPower;
+    public int damage = 10;
+    public float coolTime = 0.7f;
+    public int combo = 0; 
+    public int maxCombo = 1;
+    public float comboResetTime = 2.0f; 
     public float speed;
     public float defaultSpeed;
-    float comboTimer = 0.0f; // 占쏙옙占쏙옙 占쏙옙占?占시곤옙占쏙옙 占쏙옙占쏙옙占싹댐옙 타占싱몌옙
-    bool isDash = false; // 占쎈쉬占쏙옙 占싹댐옙占쏙옙 占쏙옙占쏙옙
-    public float dashSpeed;//占쎈쉬 占쌈듸옙
+    float comboTimer = 0.0f; 
+    bool isDash = false; 
+    public float dashSpeed;
     public float defaultTime;
     float dashTime;
     public Transform Meleepos;
@@ -44,8 +46,9 @@ public class Player : MonoBehaviour
     public AudioClip knockbackImpact;
     AudioSource audio;
 
-    //Scene
-    public int stage = 0;
+    //Health Alarm
+    public Text healthText;
+
 
     void Awake()
     {
@@ -227,7 +230,6 @@ public class Player : MonoBehaviour
             {
                 anim.SetTrigger("doDeath");
                 StartCoroutine(playerDeath());
-                stage = 0;
             }
             else
             {
@@ -246,7 +248,15 @@ public class Player : MonoBehaviour
                 StartCoroutine(Knockback(x));
                 StartCoroutine(HurtRoutine());
                 StartCoroutine(alphablink());
+                StartCoroutine(healthTextAnim());
+                
             }
+        }
+        IEnumerator healthTextAnim()
+        {
+            healthText.text = damage.ToString();
+            yield return new WaitForSeconds(0.4f);
+            healthText.text = "";
         }
     }
 
